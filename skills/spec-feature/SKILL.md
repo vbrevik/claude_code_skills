@@ -1,10 +1,21 @@
 ---
 name: spec-feature
-description: Interview-driven feature specification. Use when the user says "I want to build [feature]", "let's plan [feature]", or invokes /spec-feature. Conducts a structured Socratic interview covering technical implementation, edge cases, tradeoffs, and unconsidered concerns — then writes a SPEC.md. Run this BEFORE any implementation work begins.
+description: Interview-driven feature specification. Use when the user says "I want to build [feature]", "let's plan [feature]", or invokes /spec-feature. Conducts a structured Socratic interview covering technical implementation, edge cases, tradeoffs, and unconsidered concerns — then writes a spec. Run this BEFORE any implementation work begins.
 user-invokable: true
 ---
 
 Interview the user about their feature idea. Ask questions in focused batches — not all at once. Wait for answers before moving to the next round. The goal is to surface what they haven't thought about, not just confirm what they have.
+
+<HARD-GATE>
+Do NOT invoke any implementation skill, write any code, or take any implementation action until you have written the spec and the user has approved it. This applies to EVERY feature regardless of perceived simplicity.
+</HARD-GATE>
+
+## Phase 0: Project Context
+
+Before starting the interview, explore the project:
+- Check files, docs, recent commits, CLAUDE.md, architecture
+- Identify the tech stack, patterns, data model, and conventions in use
+- Use this context to tailor your interview questions to what actually matters for THIS codebase
 
 ## Phase 1: Brief
 
@@ -14,51 +25,51 @@ Then proceed to the interview.
 
 ## Phase 2: Interview (3–4 rounds)
 
-Run rounds sequentially. Tailor questions to this project's architecture (EAV model, Actix-web, Askama, SQLite, warnings system, permissions-via-relations). Skip questions that were already answered in the user's description.
+Run rounds sequentially. Tailor questions to this project's architecture, stack, and patterns (discovered in Phase 0). Skip questions that were already answered in the user's description.
 
 ### Round 1: Core Implementation
 
-Ask 3–4 of these (pick the most relevant):
+Ask 3–4 of these (pick the most relevant for the project's stack):
 
-- Does this need a new entity type in the EAV model, or does it compose from existing types?
-- What routes are needed? GET to render, POST to act — or something more complex (pagination, search)?
-- What permission code(s) should gate this? Existing ones, or new ones that need seeding?
-- Should this get a nav item? Which module (Admin, Governance, or standalone)?
-- Does this need a new `relation_type` in the ontology? What would it express?
+- What new data structures, models, or schema changes are needed — or does this compose from what exists?
+- What routes/endpoints/commands are needed? What are the inputs and outputs?
+- What permissions or authorization rules should gate this?
+- Where does this fit in the existing UI/CLI/API surface? New page, new section, extension of existing?
+- Does this introduce a new concept to the domain model, or reuse existing ones?
 
 ### Round 2: Edge Cases & Errors
 
 Ask 3–4 of these:
 
 - What's the empty state — what does the user see before any data exists?
-- What happens if a referenced entity is deleted mid-flow (e.g. role deleted while building)?
+- What happens if a referenced resource is deleted or modified mid-flow?
 - What are the field constraints? (length limits, format, required vs optional)
 - Can two users act on the same data concurrently? Is that a problem?
-- What's the failure mode if the DB operation fails partway through?
+- What's the failure mode if an operation fails partway through?
 
 ### Round 3: Integration
 
 Ask 3–4 of these:
 
-- What audit events should be logged? (`action.name`, target type, what goes in `details`?)
-- Should this trigger any warnings? Under what conditions?
-- Does this change what a role's permissions mean? Does it affect the Menu Builder or Role Builder?
-- Does any existing feature need to change to accommodate this?
-- Does this need a migration, or does the EAV schema absorb it without schema changes?
+- What events should be logged or tracked?
+- Does this affect existing features — do any need to change to accommodate this?
+- Does this need a database migration, or does the existing schema absorb it?
+- What external services or dependencies does this touch?
+- Does this affect the build, deploy, or test pipeline?
 
 ### Round 4: Hard Questions (the ones they probably haven't considered)
 
 Ask all of these — these are the high-value probes:
 
-1. **Simpler alternative**: Is there a version of this that delivers 80% of the value with a single handler and no new entity types? Why or why not?
-2. **Data-driven vs hardcoded**: Could this be driven by the ontology (new entity type) rather than code? What are the tradeoffs?
-3. **Access control inversion**: Who should explicitly *not* be able to do this, and is that expressible with the current permission model?
-4. **Testability**: Walk me through how you'd write an integration test for the happy path. If it's hard to describe, is the design right?
-5. **Rollback**: If this ships and causes problems, what's the rollback? Is it a `DELETE FROM entities WHERE entity_type = 'x'` or does it require a code revert?
+1. **Simpler alternative**: Is there a version of this that delivers 80% of the value with significantly less complexity? Why or why not?
+2. **Data-driven vs hardcoded**: Could any part of this be configuration-driven rather than code-driven? What are the tradeoffs?
+3. **Access control inversion**: Who should explicitly *not* be able to do this, and is that expressible with the current auth model?
+4. **Testability**: Walk me through how you'd write a test for the happy path. If it's hard to describe, is the design right?
+5. **Rollback**: If this ships and causes problems, what's the rollback? Data deletion, code revert, feature flag, or something harder?
 
-## Phase 3: Write SPEC.md
+## Phase 3: Write Spec
 
-After the interview, synthesize everything into `docs/specs/SPEC-[feature-name].md`. Use this structure:
+After the interview, synthesize everything into `docs/superpowers/specs/YYYY-MM-DD-<feature-name>-design.md`. Use this structure:
 
 ```markdown
 # Feature Spec: [Feature Name]
@@ -85,25 +96,24 @@ _Date: [today] | Status: Draft_
 
 ### Data Model
 
-[New entity types, properties, relations needed. "None — uses existing X/Y" is a valid answer.]
+[New types, schemas, models needed. "None — uses existing X/Y" is a valid answer.]
 
-### Routes & Handlers
+### Routes / Endpoints / Commands
 
-| Method | Path | Handler | Permission |
-|--------|------|---------|------------|
-| GET | /path | handler_fn | permission.code |
-| POST | /path | handler_fn | permission.code |
+| Method | Path | Handler | Auth |
+|--------|------|---------|------|
+| ... | ... | ... | ... |
 
-### Templates
+### UI / Templates / Components
 
-[Which templates to create/modify. Key interactions, form fields, empty states.]
+[What to create/modify. Key interactions, form fields, empty states.]
 
 ### Integration Points
 
-- **Audit logging**: [events to log, target type, details shape]
-- **Warnings**: [conditions that trigger warnings, or "none"]
-- **Nav**: [new nav item and parent, or "none"]
-- **Permissions**: [new permission codes to seed, or reuse existing]
+- **Logging/Events**: [what to track, or "none"]
+- **External services**: [what this touches, or "none"]
+- **Navigation/Discovery**: [how users find this feature]
+- **Permissions**: [new permission rules, or reuse existing]
 
 ## Edge Cases & Error Handling
 
@@ -127,18 +137,29 @@ _Date: [today] | Status: Draft_
 - [Anything unresolved — must be resolved before implementation begins]
 ```
 
-## Phase 4: Handoff
+Commit the spec to git after writing it.
 
-After writing the spec, ask the user: **"Ready to implement? I can invoke the feature-dev skill to build this from the spec."**
+## Phase 4: Spec Review
 
-If yes, use the `feature-dev:feature-dev` skill and reference the SPEC.md as the source of truth.
+After writing and committing the spec:
+
+1. Ask the user to review the spec file before proceeding
+2. If they request changes, make them
+3. Only proceed once the user approves
+
+> "Spec written and committed to `<path>`. Please review it and let me know if you want to make any changes before we move to implementation planning."
+
+## Phase 5: Handoff
+
+After the user approves the spec, invoke the `superpowers:writing-plans` skill to create a detailed implementation plan from the spec. Do NOT invoke any other skill — writing-plans is the next step.
 
 ## Rules
 
 - **One batch at a time.** Ask 3–4 questions, wait, then continue. Don't dump the whole interview at once.
 - **Disagree when warranted.** If the user's answer reveals a problem, say so. This is an interview, not a form.
-- **Hard questions are mandatory.** Phase 2 Round 4 questions must all be asked. Don't skip them because the feature "seems simple".
-- **Spec is the contract.** Don't start implementation until SPEC.md is written and the user has confirmed it looks right.
+- **Hard questions are mandatory.** Round 4 questions must all be asked. Don't skip them because the feature "seems simple".
+- **Spec is the contract.** Don't start implementation until the spec is written and the user has confirmed it.
 - **Out-of-scope is as important as in-scope.** If a scope question wasn't raised, raise it.
+- **YAGNI ruthlessly.** Push back on unnecessary complexity. Propose the simplest thing that works.
 
 ARGUMENTS: Optionally pass the feature description, e.g. `/spec-feature add dark mode toggle to account page`. If no argument is given, ask the user to describe what they want to build.
