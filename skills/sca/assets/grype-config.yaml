@@ -1,0 +1,7 @@
+ignore:
+  # Known false positives or accepted risks
+  # - vulnerability: CVE-XXXX-YYYY
+check-for-app-update: false
+db:
+  auto-update: false  # Air-gap: use pre-downloaded DB
+  # cache-dir: /opt/grype/db  # Override for air-gapped environments

@@ -1,0 +1,33 @@
+rules:
+  - id: stig-config-hardcoded-secret
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $KEY = "..."
+          - pattern: |
+              $KEY: "..."
+          - pattern: |
+              const $KEY = "..."
+          - pattern: |
+              let $KEY = "..."
+          - pattern: |
+              var $KEY = "..."
+      - metavariable-regex:
+          metavariable: $KEY
+          regex: "(?i)(api.?key|api.?secret|secret.?key|auth.?token|access.?token|private.?key|client.?secret|db.?password|database.?password|aws.?secret)"
+      - pattern-not: |
+          $KEY = ""
+      - pattern-not: |
+          $KEY: ""
+      - pattern-not: |
+          const $KEY = ""
+    message: >
+      Hardcoded secret detected (API key, token, or password in source code).
+      Use environment variables or a secrets manager.
+      Violates STIG V-222642 (CAT I).
+    languages: [typescript, javascript, python, java, go]
+    severity: ERROR
+    metadata:
+      stig_id: V-222642
+      category: configuration
+      confidence: MEDIUM

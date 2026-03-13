@@ -1,0 +1,84 @@
+rules:
+  - id: stig-injection-xss
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $EL.innerHTML = $VAR
+          - pattern: |
+              document.write($VAR)
+          - pattern: |
+              $(...).html($VAR)
+    message: >
+      Unsafe HTML insertion with potentially untrusted content. Use
+      textContent or a sanitizer library (DOMPurify). Violates STIG V-222602 (CAT I).
+    languages: [typescript, javascript]
+    severity: ERROR
+    metadata:
+      stig_id: V-222602
+      category: injection
+      confidence: MEDIUM
+
+  - id: stig-injection-command
+    pattern-either:
+      - pattern: |
+          exec($CMD, ...)
+      - pattern: |
+          execSync($CMD, ...)
+      - pattern: |
+          os.system($CMD)
+      - pattern: |
+          subprocess.call($CMD, shell=True, ...)
+      - pattern: |
+          subprocess.run($CMD, shell=True, ...)
+    message: >
+      OS command execution detected. If user input reaches this call,
+      it enables command injection. Use parameterized arguments or
+      allowlisted commands. Violates STIG V-222604 (CAT I).
+    languages: [typescript, javascript, python, go]
+    severity: ERROR
+    metadata:
+      stig_id: V-222604
+      category: injection
+      confidence: MEDIUM
+
+  - id: stig-injection-sql
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $DB.query("..." + $VAR + "...", ...)
+          - pattern: |
+              $DB.query(`...${$VAR}...`, ...)
+          - pattern: |
+              "SELECT " + ... + $VAR + ...
+          - pattern: |
+              `SELECT ...${$VAR}...`
+    message: >
+      SQL query constructed via string concatenation/interpolation with
+      variable input. Use parameterized queries. Violates STIG V-222607 (CAT I).
+    languages: [typescript, javascript, java, go]
+    severity: ERROR
+    metadata:
+      stig_id: V-222607
+      category: injection
+      confidence: HIGH
+
+  - id: stig-injection-xxe
+    patterns:
+      - pattern-either:
+          - pattern: |
+              new DOMParser()
+          - pattern: |
+              xml.etree.ElementTree.parse(...)
+          - pattern: |
+              lxml.etree.parse(...)
+          - pattern: |
+              DocumentBuilderFactory.newInstance()
+    message: >
+      XML parser instantiation detected. Ensure external entity processing
+      is disabled to prevent XXE attacks. Violates STIG V-222608 (CAT I).
+    languages: [typescript, javascript, python, java]
+    severity: WARNING
+    metadata:
+      stig_id: V-222608
+      category: injection
+      confidence: LOW

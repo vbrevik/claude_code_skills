@@ -1,0 +1,94 @@
+rules:
+  - id: stig-auth-no-bypass
+    patterns:
+      - pattern-either:
+          - pattern: |
+              if ($SKIP) { return ... }
+          - pattern: |
+              if ($SKIP) return ...
+      - metavariable-regex:
+          metavariable: $SKIP
+          regex: "(?i)(skip.?auth|bypass.?auth|no.?auth|disable.?auth|auth.?disabled|skip.?verify|skip.?check)"
+    message: >
+      Authentication bypass detected. A conditional check allows skipping
+      authentication, which violates STIG V-222425 (CAT I).
+    languages: [typescript, javascript, python, java, go]
+    severity: ERROR
+    metadata:
+      stig_id: V-222425
+      category: auth
+      confidence: HIGH
+
+  - id: stig-auth-plaintext-password
+    patterns:
+      - pattern-either:
+          - pattern: |
+              password = "..."
+          - pattern: |
+              password: "..."
+          - pattern: |
+              passwd = "..."
+          - pattern: |
+              $OBJ.password = "..."
+      - pattern-not: |
+          password = ""
+      - pattern-not: |
+          password: ""
+    message: >
+      Hardcoded password detected. Passwords must be hashed with approved
+      algorithms (Argon2, bcrypt, PBKDF2), never stored in plaintext.
+      Violates STIG V-222542 (CAT I).
+    languages: [typescript, javascript, python, java, go]
+    severity: ERROR
+    metadata:
+      stig_id: V-222542
+      category: auth
+      confidence: MEDIUM
+
+  - id: stig-auth-password-in-url
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $URL + "..." + $PASSWORD
+          - pattern: |
+              `...password=${$VAR}...`
+          - pattern: |
+              `...passwd=${$VAR}...`
+          - pattern: |
+              "...&password=" + ...
+    message: >
+      Password transmitted via URL parameter. Passwords must only be sent
+      in request bodies over HTTPS. Violates STIG V-222543 (CAT I).
+    languages: [typescript, javascript, python, java, go]
+    severity: ERROR
+    metadata:
+      stig_id: V-222543
+      category: auth
+      confidence: HIGH
+
+  - id: stig-auth-weak-password-length
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $X.length < $N
+          - pattern: |
+              $X.length <= $N
+          - pattern: |
+              len($X) < $N
+          - pattern: |
+              len($X) <= $N
+      - metavariable-regex:
+          metavariable: $N
+          regex: "^([1-9]|1[0-4])$"
+      - metavariable-regex:
+          metavariable: $X
+          regex: "(?i)(password|passwd|pass)"
+    message: >
+      Password length validation below 15 characters. STIG V-222536 (CAT I)
+      requires minimum 15-character passwords.
+    languages: [typescript, javascript, python, java, go]
+    severity: ERROR
+    metadata:
+      stig_id: V-222536
+      category: auth
+      confidence: HIGH

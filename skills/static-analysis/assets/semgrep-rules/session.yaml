@@ -1,0 +1,82 @@
+rules:
+  - id: stig-session-id-exposure
+    patterns:
+      - pattern-either:
+          - pattern: |
+              console.log(..., $SESSION, ...)
+          - pattern: |
+              logger.info(..., $SESSION, ...)
+          - pattern: |
+              logger.debug(..., $SESSION, ...)
+          - pattern: |
+              console.log($SESSION)
+      - metavariable-regex:
+          metavariable: $SESSION
+          regex: "(?i)(session.?id|sessionId|session_id|sid|token)"
+    message: >
+      Session identifier logged or printed. Session IDs must not appear
+      in logs, URLs, or error messages. Violates STIG V-222577 (CAT I).
+    languages: [typescript, javascript, python, java, go]
+    severity: ERROR
+    metadata:
+      stig_id: V-222577
+      category: session-management
+      confidence: MEDIUM
+
+  - id: stig-session-url-embedded
+    patterns:
+      - pattern-either:
+          - pattern: |
+              `...?sid=${...}...`
+          - pattern: |
+              `...?session_id=${...}...`
+          - pattern: |
+              `...?sessionId=${...}...`
+          - pattern: |
+              `...&sid=${...}...`
+          - pattern: |
+              "...?sid=" + ...
+          - pattern: |
+              "...?session_id=" + ...
+    message: >
+      Session ID embedded in URL. Use HTTP-only Secure cookies for session
+      transport, never URL parameters. Violates STIG V-222581 (CAT I).
+    languages: [typescript, javascript, python, java, go]
+    severity: ERROR
+    metadata:
+      stig_id: V-222581
+      category: session-management
+      confidence: HIGH
+
+  - id: stig-session-no-invalidate
+    patterns:
+      - pattern: |
+          function $LOGOUT(...) {
+            ...
+            res.redirect(...)
+          }
+      - pattern-not: |
+          function $LOGOUT(...) {
+            ...
+            $SESSION.destroy(...)
+            ...
+          }
+      - pattern-not: |
+          function $LOGOUT(...) {
+            ...
+            $SESSION.purge(...)
+            ...
+          }
+      - metavariable-regex:
+          metavariable: $LOGOUT
+          regex: "(?i)(logout|logoff|signout|sign.?out)"
+    message: >
+      Logout function redirects without invalidating the session.
+      Destroy server-side session state on logout.
+      Violates STIG V-222578 (CAT I).
+    languages: [typescript, javascript]
+    severity: ERROR
+    metadata:
+      stig_id: V-222578
+      category: session-management
+      confidence: MEDIUM

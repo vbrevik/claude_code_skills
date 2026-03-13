@@ -1,0 +1,22 @@
+rules:
+  - id: stig-audit-no-error-handling
+    patterns:
+      - pattern-either:
+          - pattern: |
+              await auditLog(...)
+          - pattern: |
+              await logAudit(...)
+          - pattern: |
+              await audit.log(...)
+      - pattern-not-inside: |
+          try { ... } catch ($E) { ... }
+    message: >
+      Audit logging call without error handling. Wrap audit log calls in
+      try/catch and alert administrators on failure.
+      Violates STIG V-222485 (CAT I).
+    languages: [typescript, javascript]
+    severity: ERROR
+    metadata:
+      stig_id: V-222485
+      category: audit-logging
+      confidence: MEDIUM

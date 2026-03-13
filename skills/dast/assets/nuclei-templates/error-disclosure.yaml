@@ -1,0 +1,63 @@
+id: stig-error-stack-trace
+
+info:
+  name: Stack Trace in Error Response
+  author: stig-dast
+  severity: medium
+  description: Application error response contains a stack trace. Detailed error information must only be available to administrators.
+  metadata:
+    stig_id: V-222610
+    category: error-disclosure
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/nonexistent-path-for-error-test"
+      - "{{BaseURL}}/api/nonexistent"
+    matchers-condition: or
+    matchers:
+      - type: regex
+        regex:
+          - "at\\s+\\S+\\s+\\(.*:\\d+:\\d+\\)"
+          - "Traceback \\(most recent call"
+          - "Exception in thread"
+          - "goroutine \\d+ \\[running\\]"
+        part: body
+      - type: word
+        words:
+          - "node_modules/"
+          - "internal/modules/"
+          - "site-packages/"
+        part: body
+
+---
+
+id: stig-error-debug-mode
+
+info:
+  name: Debug Mode Enabled
+  author: stig-dast
+  severity: medium
+  description: Application appears to be running in debug mode, exposing detailed error information.
+  metadata:
+    stig_id: V-222610
+    category: error-disclosure
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/nonexistent-path-for-error-test"
+    matchers-condition: or
+    matchers:
+      - type: word
+        words:
+          - "DJANGO_SETTINGS_MODULE"
+          - "Debug Mode: ON"
+          - "Debugger PIN"
+          - "X-Debug-Token"
+        part: body
+      - type: word
+        words:
+          - "x-debug-token"
+        part: header
+        case-insensitive: true

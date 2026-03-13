@@ -1,0 +1,44 @@
+# Custom gitleaks configuration for visitor-mock and similar projects
+# Extends default rules with project-specific allowlists
+
+title = "secret-scan custom config"
+
+[extend]
+# Use gitleaks default rules as base
+useDefault = true
+
+[allowlist]
+description = "Global allowlist for known safe patterns"
+
+# Known test/mock infrastructure paths
+paths = [
+    '''keycloak/realm-export\.json$''',
+    '''keycloak/.*realm.*\.json$''',
+    '''\.env\.example$''',
+    '''\.env\.template$''',
+    '''\.env\.sample$''',
+    '''docker-compose\.dev\.yml$''',
+    '''docker-compose\.test\.yml$''',
+    '''packages/mocks/.*\.ts$''',
+    '''tests?/fixtures/.*''',
+    '''tests?/.*\.test\.(ts|js)$''',
+    '''__tests__/.*''',
+    '''\.snap$''',
+    '''CLAUDE\.md$''',
+    '''\.claude/.*''',
+    '''node_modules/.*''',
+    '''\.codegraph/.*''',
+]
+
+# Patterns that are known false positives
+regexes = [
+    '''EXAMPLE_KEY''',
+    '''your[_-]?api[_-]?key''',
+    '''replace[_-]?with''',
+    '''INSERT[_-]?YOUR''',
+    '''placeholder''',
+    '''dummy[_-]?(key|token|secret|password)''',
+    '''test[_-]?(key|token|secret|password)''',
+    '''fake[_-]?(key|token|secret|password)''',
+    '''mock[_-]?(key|token|secret|password)''',
+]
