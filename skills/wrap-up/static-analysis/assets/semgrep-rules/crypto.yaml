@@ -1,0 +1,50 @@
+rules:
+  - id: stig-crypto-weak-hash
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $CRYPTO.createHash("md5")
+          - pattern: |
+              $CRYPTO.createHash("sha1")
+          - pattern: |
+              md5(...)
+          - pattern: |
+              hashlib.md5(...)
+          - pattern: |
+              hashlib.sha1(...)
+          - pattern: |
+              MD5.Create()
+          - pattern: |
+              SHA1.Create()
+          - pattern: |
+              Hashing.md5()
+    message: >
+      Weak hash algorithm (MD5 or SHA1) used for security purposes.
+      Use SHA-256 or stronger. Violates STIG V-222571 (CAT I).
+    languages: [typescript, javascript, python, java, go, csharp]
+    severity: ERROR
+    metadata:
+      stig_id: V-222571
+      category: cryptography
+      confidence: HIGH
+
+  - id: stig-crypto-weak-sign
+    patterns:
+      - pattern-either:
+          - pattern: |
+              $CRYPTO.createSign("md5")
+          - pattern: |
+              $CRYPTO.createSign("sha1")
+          - pattern: |
+              $CRYPTO.createSign("RSA-MD5")
+          - pattern: |
+              $CRYPTO.createSign("RSA-SHA1")
+    message: >
+      Weak signing algorithm (MD5 or SHA1). Use SHA-256 or stronger
+      for all signing operations. Violates STIG V-222570 (CAT I).
+    languages: [typescript, javascript, python, java, go]
+    severity: ERROR
+    metadata:
+      stig_id: V-222570
+      category: cryptography
+      confidence: HIGH

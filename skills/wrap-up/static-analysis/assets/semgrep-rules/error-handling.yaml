@@ -1,0 +1,51 @@
+rules:
+  - id: stig-error-stack-leak
+    patterns:
+      - pattern-either:
+          - pattern: |
+              res.send($ERR.stack)
+          - pattern: |
+              res.json({..., stack: $ERR.stack, ...})
+          - pattern: |
+              res.json({..., error: $ERR.message, ...})
+          - pattern: |
+              res.status(...).send($ERR.stack)
+          - pattern: |
+              res.status(...).json({..., stack: ..., ...})
+          - pattern: |
+              return new Response($ERR.stack, ...)
+          - pattern: |
+              return c.json({..., stack: $ERR.stack, ...})
+          - pattern: |
+              traceback.format_exc()
+    message: >
+      Stack trace or error details leaked in HTTP response. Return generic
+      error messages to users; log details server-side only.
+      Violates STIG V-222610 (CAT II).
+    languages: [typescript, javascript, python]
+    severity: WARNING
+    metadata:
+      stig_id: V-222610
+      category: error-handling
+      confidence: HIGH
+
+  - id: stig-error-fail-open
+    patterns:
+      - pattern-inside: |
+          try { ... } catch ($E) { ... }
+      - pattern-either:
+          - pattern: |
+              return true
+          - pattern: |
+              $AUTH = true
+          - pattern: |
+              next()
+    message: >
+      Error handler may default to permissive/allow state. Applications must
+      fail to a secure (deny) state. Violates STIG V-222585 (CAT I).
+    languages: [typescript, javascript]
+    severity: ERROR
+    metadata:
+      stig_id: V-222585
+      category: error-handling
+      confidence: MEDIUM

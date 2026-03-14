@@ -1,0 +1,117 @@
+id: stig-header-no-csp
+
+info:
+  name: Missing Content-Security-Policy Header
+  author: stig-dast
+  severity: high
+  description: No Content-Security-Policy header found. CSP prevents XSS by restricting script sources.
+  metadata:
+    stig_id: V-222602
+    category: security-headers
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/"
+    matchers-condition: and
+    matchers:
+      - type: status
+        status:
+          - 200
+          - 301
+          - 302
+        condition: or
+      - type: word
+        words:
+          - "content-security-policy"
+        part: header
+        negative: true
+
+---
+
+id: stig-header-no-xframe
+
+info:
+  name: Missing X-Frame-Options Header
+  author: stig-dast
+  severity: high
+  description: No X-Frame-Options header found. Required to prevent clickjacking attacks.
+  metadata:
+    stig_id: V-222602
+    category: security-headers
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/"
+    matchers-condition: and
+    matchers:
+      - type: status
+        status:
+          - 200
+        condition: or
+      - type: word
+        words:
+          - "x-frame-options"
+        part: header
+        negative: true
+
+---
+
+id: stig-header-no-xcontent
+
+info:
+  name: Missing X-Content-Type-Options Header
+  author: stig-dast
+  severity: medium
+  description: No X-Content-Type-Options header found. Set to 'nosniff' to prevent MIME-type sniffing.
+  metadata:
+    stig_id: V-222602
+    category: security-headers
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/"
+    matchers-condition: and
+    matchers:
+      - type: status
+        status:
+          - 200
+        condition: or
+      - type: word
+        words:
+          - "x-content-type-options"
+        part: header
+        negative: true
+
+---
+
+id: stig-header-no-hsts
+
+info:
+  name: Missing Strict-Transport-Security Header
+  author: stig-dast
+  severity: medium
+  description: No HSTS header found. Required to enforce HTTPS connections.
+  metadata:
+    stig_id: V-222596
+    category: security-headers
+
+http:
+  - method: GET
+    path:
+      - "{{BaseURL}}/"
+    matchers-condition: and
+    matchers:
+      - type: status
+        status:
+          - 200
+          - 301
+          - 302
+        condition: or
+      - type: word
+        words:
+          - "strict-transport-security"
+        part: header
+        negative: true
